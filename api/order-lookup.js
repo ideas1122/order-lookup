@@ -1,26 +1,28 @@
 const axios = require('axios');
 
 module.exports = async (req, res) => {
+  // ✅ CORS HEADERS — required for browser to access
+  res.setHeader('Access-Control-Allow-Origin', '*'); // or specify domain
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  // ✅ Support preflight requests from browser
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Only POST method is allowed.' });
+  }
+
+  const { order_number, email } = req.body || {};
+
+  if (!order_number || !email) {
+    return res.status(400).json({ error: 'Order number and email are required.' });
+  }
+
   try {
-    console.log('📥 Incoming Method:', req.method);
-
-    if (req.method !== 'POST') {
-      return res.status(405).json({ error: 'Only POST method is allowed.' });
-    }
-
-    console.log('📦 Body Received:', req.body);
-
-    const { order_number, email } = req.body || {};
-
-    if (!order_number || !email) {
-      console.log('⚠️ Missing order_number or email');
-      return res.status(400).json({ error: 'Order number and email are required.' });
-    }
-
-    const url = `${process.env.SHOPIFY_API_URL}?status=any&name=${order_number}`;
-    console.log('🔗 Requesting Shopify URL:', url);
-
-    const response = await axios.get(url, {
+    const response = await axios.get(`${process.env.SHOPIFY_API_URL}?status=any&name=${order_number}`, {
       headers: {
         'X-Shopify-Access-Token': process.env.SHOPIFY_TOKEN,
         'Content-Type': 'application/json'
@@ -30,20 +32,12 @@ module.exports = async (req, res) => {
     const orders = response.data.orders || [];
     const match = orders.find(order => order.email.toLowerCase() === email.toLowerCase());
 
-    console.log('🔍 Orders found:', orders.length);
-
     if (match) {
-      console.log('✅ Match found');
       return res.status(200).json(match);
     } else {
-      console.log('❌ No match');
       return res.status(404).json({ error: 'Order not found. Please check your details.' });
     }
   } catch (error) {
-    console.error('🔥 Error:', error.message);
-    return res.status(500).json({
-      error: 'Internal server error',
-      message: error.message
-    });
+    return res.status(500).json({ error: 'Internal server error', message: error.message });
   }
 };
