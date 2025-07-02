@@ -3,49 +3,53 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Order Lookup</title>
+  <title>Track Your Order</title>
   <style>
     body {
-      font-family: sans-serif;
-      background: #f8f9fa;
-      padding: 2rem;
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      display: flex;
+      justify-content: center;
+      padding: 40px;
     }
-    .card {
-      max-width: 600px;
-      margin: auto;
-      padding: 2rem;
+    .container {
       background: white;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      border-radius: 10px;
+      padding: 30px;
+      max-width: 500px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      width: 100%;
     }
     input, button {
+      width: 100%;
       padding: 10px;
       margin-top: 10px;
-      width: 100%;
+      font-size: 16px;
       border-radius: 6px;
       border: 1px solid #ccc;
     }
-    .btn {
+    button {
       background: #007bff;
       color: white;
       cursor: pointer;
     }
     .result {
-      margin-top: 1.5rem;
-      background: #f1f1f1;
-      padding: 1rem;
-      border-radius: 8px;
+      margin-top: 20px;
+      padding: 15px;
+      border-left: 4px solid #28a745;
+      background: #f9f9f9;
+      border-radius: 5px;
     }
   </style>
 </head>
 <body>
-  <div class="card">
+  <div class="container">
     <h2>Track Your Order</h2>
-    <input type="text" id="orderNumber" placeholder="Order Number (e.g., #1003)" />
-    <input type="email" id="email" placeholder="Email Address" />
-    <button class="btn" onclick="trackOrder()">Track My Order</button>
+    <input type="text" id="orderNumber" placeholder="Enter Order Number (#1003)" />
+    <input type="email" id="email" placeholder="Enter Email (test123@gmail.com)" />
+    <button onclick="trackOrder()">Track Order</button>
 
-    <div id="result" class="result" style="display: none;"></div>
+    <div id="result" class="result" style="display:none;"></div>
   </div>
 
   <script>
@@ -54,32 +58,42 @@
       const email = document.getElementById('email').value;
       const result = document.getElementById('result');
       result.style.display = 'block';
-      result.innerText = 'Loading...';
+      result.innerText = 'Searching...';
 
       try {
         const res = await fetch('/order-lookup', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json'
+          },
           body: JSON.stringify({ order_number: orderNumber, email })
         });
+
         const data = await res.json();
+
         if (res.ok) {
+          const tracking = data.fulfillments?.[0]?.tracking_number || 'Not Available';
+          const product = data.line_items?.[0]?.title || 'N/A';
+          const variant = data.line_items?.[0]?.variant_title || '';
+          const statusUrl = data.order_status_url || '#';
+
           result.innerHTML = `
-            ✅ <strong>Order Found</strong><br/>
-            <b>Order Number:</b> ${data.name}<br/>
-            <b>Email:</b> ${data.email}<br/>
-            <b>Status:</b> ${data.financial_status}<br/>
-            <b>Total:</b> ${data.total_price} ${data.currency}<br/>
-            <b>Product:</b> ${data.line_items[0]?.title} — ${data.line_items[0]?.variant_title || ''}<br/>
-            <b>Tracking Number:</b> ${data.fulfillments?.[0]?.tracking_number || 'N/A'}<br/>
-            <br/>
-            <a href="${data.order_status_url}" target="_blank">View Order Status</a>
+            ✅ <strong>Order Found</strong><br><br>
+            <strong>Order Number:</strong> ${data.name}<br>
+            <strong>Email:</strong> ${data.email}<br>
+            <strong>Status:</strong> ${data.financial_status}<br>
+            <strong>Total:</strong> ${data.total_price} ${data.currency}<br>
+            <strong>Product:</strong> ${product} — ${variant}<br>
+            <strong>Tracking Number:</strong> ${tracking}<br><br>
+            <a href="${statusUrl}" target="_blank">
+              <button>View Order Status</button>
+            </a>
           `;
         } else {
           result.innerHTML = `❌ ${data.error}`;
         }
-      } catch (err) {
-        result.innerText = 'Error fetching order.';
+      } catch (error) {
+        result.innerText = '❌ Failed to fetch order. Please try again.';
       }
     }
   </script>
