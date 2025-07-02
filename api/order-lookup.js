@@ -1,3 +1,5 @@
+const fs = require('fs');
+const path = require('path');
 const axios = require('axios');
 
 module.exports = async (req, res) => {
@@ -31,6 +33,11 @@ module.exports = async (req, res) => {
 
     const orders = response.data.orders || [];
     const match = orders.find(order => order.email.toLowerCase() === email.toLowerCase());
+  if (req.method === 'GET' && req.url === '/') {
+  res.setHeader('Content-Type', 'text/html');
+  const html = fs.readFileSync(path.join(__dirname, '../index.html'));
+  return res.status(200).send(html);
+}
 
     if (match) {
       return res.status(200).json(match);
