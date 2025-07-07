@@ -44,7 +44,8 @@ module.exports = async (req, res) => {
     } else {
       return res.status(404).json({ error: 'Order not found. Please check your details.' });
     }
-  } catch (error) {
-    return res.status(500).json({ error: 'Internal server error', message: error.message });
-  }
+ } catch (error) {
+  console.error("Error in order lookup:", error.response?.data || error.message || error); // 👈 add this
+  res.status(500).json({ error: "Internal server error." });
+}
 };
