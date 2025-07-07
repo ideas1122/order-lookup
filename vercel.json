@@ -1,11 +1,20 @@
+
 {
   "version": 2,
   "builds": [
-    { "src": "api/order-lookup.js", "use": "@vercel/node" },
-    { "src": "index.html", "use": "@vercel/static" }
+    {
+      "src": "api/order-lookup.js",
+      "use": "@vercel/node"
+    }
   ],
   "routes": [
-    { "src": "/order-lookup", "dest": "api/order-lookup.js" },
-    { "src": "/", "dest": "/index.html" }
+    {
+      "src": "/order-lookup",
+      "dest": "api/order-lookup.js"
+    },
+    {
+      "src": "/",
+      "dest": "/index.html"
+    }
   ]
 }
