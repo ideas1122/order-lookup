@@ -23,25 +23,26 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Only POST method is allowed.' });
   }
 
-  const { order_number, email } = req.body || {};
+const { order_number, email } = req.body || {};
 
-  if (!order_number || !email) {
-    return res.status(400).json({ error: 'Order number and email are required.' });
-  }
+if (!order_number || !email) {
+  return res.status(400).json({ error: 'Order number and email are required.' });
+}
 
-  try {
-    const response = await axios.get(`${process.env.SHOPIFY_API_URL}?status=any&name=${order_number}`, {
-      headers: {
-        'X-Shopify-Access-Token': process.env.SHOPIFY_TOKEN,
-        'Content-Type': 'application/json'
-      }
-    });
+// ✅ Strip '#' if included
+const rawOrderNumber = order_number.trim();
+const cleanOrderNumber = rawOrderNumber.replace(/^#/, '');
 
-    const orders = response.data.orders || [];
+try {
+  const response = await axios.get(`${process.env.SHOPIFY_API_URL}?status=any&name=${cleanOrderNumber}`, {
+    headers: {
+      'X-Shopify-Access-Token': process.env.SHOPIFY_TOKEN,
+      'Content-Type': 'application/json'
+    }
+  });
 
-    const match = orders.find(order => {
-      return order.email?.toLowerCase?.() === email.toLowerCase();
-    });
+  const orders = response.data.orders || [];
+  const match = orders.find(order => order.email?.toLowerCase?.() === email.toLowerCase());
 
     if (match) {
       return res.status(200).json(match);
