@@ -13,6 +13,12 @@ module.exports = async (req, res) => {
     return res.status(200).end();
   }
 
+  if (req.method === 'GET' && req.url === '/') {
+    res.setHeader('Content-Type', 'text/html');
+    const html = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
+    return res.status(200).send(html);
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Only POST method is allowed.' });
   }
@@ -32,20 +38,18 @@ module.exports = async (req, res) => {
     });
 
     const orders = response.data.orders || [];
-    const match = orders.find(order => order.email.toLowerCase() === email.toLowerCase());
-  if (req.method === 'GET' && req.url === '/') {
-  res.setHeader('Content-Type', 'text/html');
-  const html = fs.readFileSync(path.join(__dirname, '../index.html'));
-  return res.status(200).send(html);
-}
+
+    const match = orders.find(order => {
+      return order.email?.toLowerCase?.() === email.toLowerCase();
+    });
 
     if (match) {
       return res.status(200).json(match);
     } else {
       return res.status(404).json({ error: 'Order not found. Please check your details.' });
     }
- } catch (error) {
-  console.error("Error in order lookup:", error.response?.data || error.message || error); // 👈 add this
-  res.status(500).json({ error: "Internal server error." });
-}
+  } catch (error) {
+    console.error("Error in order lookup:", error.response?.data || error.message || error);
+    return res.status(500).json({ error: 'Internal server error.' });
+  }
 };
