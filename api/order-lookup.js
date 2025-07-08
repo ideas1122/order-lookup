@@ -28,7 +28,6 @@ module.exports = async (req, res) => {
     return res.status(400).json({ error: 'Order number and email are required.' });
   }
 
-  // ✅ Remove '#' from order number if present
   const cleanOrderNumber = order_number.replace(/^#/, '').trim();
 
   try {
@@ -41,17 +40,24 @@ module.exports = async (req, res) => {
 
     const orders = response.data.orders || [];
 
-    // ✅ Debug: log all matched orders (only during development)
     console.log("Shopify returned orders:", orders.map(o => ({
       name: o.name,
       email: o.email,
       id: o.id
     })));
 
-    const match = orders.find(order => {
-      if (!order.email) return false;
-      return order.email.toLowerCase().trim() === email.toLowerCase().trim();
-    });
+    let match = null;
+
+    if (orders.length === 1 && !orders[0].email) {
+      match = orders[0];
+    } else {
+      match = orders.find(order => {
+        return (
+          order.email &&
+          order.email.toLowerCase().trim() === email.toLowerCase().trim()
+        );
+      });
+    }
 
     if (match) {
       return res.status(200).json(match);
