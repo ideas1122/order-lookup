@@ -40,10 +40,7 @@ module.exports = async (req, res) => {
 
     const orders = response.data.orders || [];
 
-    const match = orders.find(order => {
-      if (!order.email) return false;
-      return order.email.toLowerCase().trim() === email.toLowerCase().trim();
-    });
+
 
     // 🔍 Debug full matched order object
     console.log("🧾 Full matched order object:", JSON.stringify(match, null, 2));
