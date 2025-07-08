@@ -80,7 +80,7 @@
           result.innerHTML = `
             ✅ <strong>Order Found</strong><br><br>
             <strong>Order Number:</strong> ${data.name}<br>
-            <strong>Email:</strong> ${data.email}<br>
+            <p><strong>Email:</strong> ${data.email || 'Not provided'}</p><br>
             <strong>Status:</strong> ${data.financial_status}<br>
             <strong>Total:</strong> ${data.total_price} ${data.currency}<br>
             <strong>Product:</strong> ${product} — ${variant}<br>
