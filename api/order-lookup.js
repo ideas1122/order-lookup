@@ -1,4 +1,3 @@
-// ✅ order-lookup.js (Vercel Backend API)
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
@@ -22,8 +21,8 @@ module.exports = async (req, res) => {
 
   const { order_number, email } = req.body || {};
 
-  if (!order_number || !email) {
-    return res.status(400).json({ error: 'Order number and email are required.' });
+  if (!order_number) {
+    return res.status(400).json({ error: 'Order number is required.' });
   }
 
   const cleanOrderNumber = order_number.replace(/^#/, '').trim();
@@ -37,22 +36,20 @@ module.exports = async (req, res) => {
     });
 
     const orders = response.data.orders || [];
-    console.log("Shopify returned orders:", orders.map(o => ({ name: o.name, email: o.email, id: o.id })));
-
-    const match = orders.find(order => {
-      if (!order.email) return false;
-      return order.email.toLowerCase().trim() === email.toLowerCase().trim();
+    const matched = orders.find(order => {
+      // Allow match if email matches or no email provided in Shopify
+      return order.name.replace(/^#/, '') === cleanOrderNumber &&
+             (!order.email || order.email.toLowerCase().trim() === email.toLowerCase().trim());
     });
 
-    if (match) {
-      match.email = match.email || 'Not available';
-      return res.status(200).json(match);
+    if (matched) {
+      return res.status(200).json(matched);
     } else {
       return res.status(404).json({ error: 'Order not found. Please check your details.' });
     }
 
   } catch (error) {
-    console.error("\u274C Error in order lookup:", error.response?.data || error.message || error);
+    console.error("❌ Error in order lookup:", error.response?.data || error.message || error);
     return res.status(500).json({ error: 'Internal server error.' });
   }
 };
